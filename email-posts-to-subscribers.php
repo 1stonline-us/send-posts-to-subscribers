@@ -75,21 +75,33 @@ function gfs_save_email($entry, $form) {
     }
 }
 
-// Handle Unsubscriptions
+// Handle Unsubscriptions (Only If Enabled)
 add_action('gform_after_submission', 'gfs_unsubscribe_email', 10, 2);
 function gfs_unsubscribe_email($entry, $form) {
     global $wpdb;
-    $form_id = get_option('gfs_unsubscribe_form_id', '2');
-    $email_field_id = get_option('gfs_unsubscribe_email_field_id', '2');
+
+    // Get settings
+    $form_id = get_option('gfs_unsubscribe_form_id', '');
+    $email_field_id = get_option('gfs_unsubscribe_email_field_id', '');
     $table_name = $wpdb->prefix . 'gfs_subscribers';
-    
-    if (!isset($form['id']) || $form['id'] != $form_id) return;
-    
+
+    // If unsubscribe form is not set, do nothing
+    if (empty($form_id) || empty($email_field_id)) {
+        return;
+    }
+
+    // Ensure the correct form is being processed
+    if (!isset($form['id']) || $form['id'] != $form_id) {
+        return;
+    }
+
+    // Validate email
     $email = sanitize_email($entry[$email_field_id]);
     if (!empty($email) && is_email($email)) {
         $wpdb->update($table_name, ['active' => 0], ['email' => $email], ['%d'], ['%s']);
     }
 }
+
 
 add_action('publish_post', 'gfs_notify_subscribers_on_publish');
 function gfs_notify_subscribers_on_publish($post_ID) {
