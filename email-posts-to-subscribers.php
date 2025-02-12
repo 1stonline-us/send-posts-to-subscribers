@@ -91,37 +91,28 @@ function gfs_unsubscribe_email($entry, $form) {
     }
 }
 
-add_action('save_post', 'gfs_notify_subscribers_on_update', 10, 3);
-function gfs_notify_subscribers_on_update($post_ID, $post, $update) {
+add_action('publish_post', 'gfs_notify_subscribers_on_publish');
+function gfs_notify_subscribers_on_publish($post_ID) {
     global $wpdb;
 
-    if ($post->post_status !== 'publish' || wp_is_post_revision($post_ID)) return; // Skip if not published or if it's just a revision
+    // Ensure we get the correct post details
+    $post = get_post($post_ID);
+    if (!$post) return;
 
     // Get the correct permalink, title, and excerpt
     $post_permalink = get_permalink($post_ID);
-    $post_title = get_the_title($post_ID);
-    $post_excerpt = !empty($post->post_excerpt) ? $post->post_excerpt : wp_trim_words($post->post_content, 30, '...');
+    $post_title = esc_html($post->post_title);
+    $post_excerpt = !empty($post->post_excerpt) ? esc_html($post->post_excerpt) : wp_trim_words($post->post_content, 30, '...');
 
-    // Ensure this isn't a duplicate notification
-    $last_notified = get_post_meta($post_ID, 'gfs_last_notified', true);
-    $last_modified = get_post_modified_time('Y-m-d H:i:s', true, $post_ID);
-    
-    if ($last_notified && strtotime($last_modified) <= strtotime($last_notified)) {
-        return; // No significant changes, skip sending email
-    }
-
-    // Update the last notified timestamp
-    update_post_meta($post_ID, 'gfs_last_notified', current_time('mysql'));
-
-    // Get subscriber emails
+    // Get subscribers
     $table_name = $wpdb->prefix . 'gfs_subscribers';
     $from_email = get_option('gfs_from_email', get_bloginfo('admin_email'));
     $subscribers = $wpdb->get_col("SELECT email FROM $table_name WHERE active = 1");
 
     if (!empty($subscribers)) {
-        $subject = 'New or Updated Post: ' . $post_title;
-        $message = '<h2>' . esc_html($post_title) . '</h2>';
-        $message .= '<p>' . esc_html($post_excerpt) . '</p>';
+        $subject = 'New Post: ' . $post_title;
+        $message = '<h2>' . $post_title . '</h2>';
+        $message .= '<p>' . $post_excerpt . '</p>';
         $message .= '<p><a href="' . esc_url($post_permalink) . '">Read More</a></p>';
 
         $headers = ['Content-Type: text/html; charset=UTF-8', 'From: ' . esc_html($from_email)];
@@ -133,7 +124,6 @@ function gfs_notify_subscribers_on_update($post_ID, $post, $update) {
         }
     }
 }
-
 
 // Admin Settings Page UI
 function gfs_settings_page() {
