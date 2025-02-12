@@ -97,38 +97,34 @@ function gfs_notify_subscribers_on_update($post_ID, $post, $update) {
 
     if ($post->post_status !== 'publish' || wp_is_post_revision($post_ID)) return; // Skip if not published or if it's just a revision
 
-    // Retrieve previous content and title
-    $previous_content = get_post_meta($post_ID, '_gfs_previous_content', true);
-    $previous_title = get_post_meta($post_ID, '_gfs_previous_title', true);
+    // Get the correct permalink, title, and excerpt
+    $post_permalink = get_permalink($post_ID);
+    $post_title = get_the_title($post_ID);
+    $post_excerpt = !empty($post->post_excerpt) ? $post->post_excerpt : wp_trim_words($post->post_content, 30, '...');
+
+    // Ensure this isn't a duplicate notification
+    $last_notified = get_post_meta($post_ID, 'gfs_last_notified', true);
+    $last_modified = get_post_modified_time('Y-m-d H:i:s', true, $post_ID);
     
-    // Get current post content and title
-    $current_content = $post->post_content;
-    $current_title = $post->post_title;
-
-    // Determine if this is a new post (no previous metadata exists)
-    $is_new_post = empty($previous_content) && empty($previous_title);
-
-    // Only send an email if:
-    // - It's a new post
-    // - OR the title/content has changed significantly
-    if (!$is_new_post && $previous_content === $current_content && $previous_title === $current_title) {
-        return; // No significant update detected, do not send an email
+    if ($last_notified && strtotime($last_modified) <= strtotime($last_notified)) {
+        return; // No significant changes, skip sending email
     }
 
-    // Update stored values for next comparison
-    update_post_meta($post_ID, '_gfs_previous_content', $current_content);
-    update_post_meta($post_ID, '_gfs_previous_title', $current_title);
+    // Update the last notified timestamp
     update_post_meta($post_ID, 'gfs_last_notified', current_time('mysql'));
 
-    // Get subscribers
+    // Get subscriber emails
     $table_name = $wpdb->prefix . 'gfs_subscribers';
     $from_email = get_option('gfs_from_email', get_bloginfo('admin_email'));
     $subscribers = $wpdb->get_col("SELECT email FROM $table_name WHERE active = 1");
 
     if (!empty($subscribers)) {
-        $subject = $is_new_post ? 'New Post: ' . get_the_title($post_ID) : 'Updated Post: ' . get_the_title($post_ID);
-        $message = 'A post has been ' . ($is_new_post ? 'published' : 'significantly updated') . ': <a href="' . get_permalink($post_ID) . '">' . get_permalink($post_ID) . '</a>';
-        $headers = ['Content-Type: text/html; charset=UTF-8', 'From: ' . $from_email];
+        $subject = 'New or Updated Post: ' . $post_title;
+        $message = '<h2>' . esc_html($post_title) . '</h2>';
+        $message .= '<p>' . esc_html($post_excerpt) . '</p>';
+        $message .= '<p><a href="' . esc_url($post_permalink) . '">Read More</a></p>';
+
+        $headers = ['Content-Type: text/html; charset=UTF-8', 'From: ' . esc_html($from_email)];
 
         foreach ($subscribers as $email) {
             if (!wp_mail($email, $subject, $message, $headers)) {
@@ -137,6 +133,7 @@ function gfs_notify_subscribers_on_update($post_ID, $post, $update) {
         }
     }
 }
+
 
 // Admin Settings Page UI
 function gfs_settings_page() {
