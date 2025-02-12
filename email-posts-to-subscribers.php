@@ -105,9 +105,14 @@ function gfs_notify_subscribers_on_update($post_ID, $post, $update) {
     $current_content = $post->post_content;
     $current_title = $post->post_title;
 
-    // Only send email if the title or content has changed significantly
-    if ($previous_content === $current_content && $previous_title === $current_title) {
-        return;
+    // Determine if this is a new post (no previous metadata exists)
+    $is_new_post = empty($previous_content) && empty($previous_title);
+
+    // Only send an email if:
+    // - It's a new post
+    // - OR the title/content has changed significantly
+    if (!$is_new_post && $previous_content === $current_content && $previous_title === $current_title) {
+        return; // No significant update detected, do not send an email
     }
 
     // Update stored values for next comparison
@@ -121,8 +126,8 @@ function gfs_notify_subscribers_on_update($post_ID, $post, $update) {
     $subscribers = $wpdb->get_col("SELECT email FROM $table_name WHERE active = 1");
 
     if (!empty($subscribers)) {
-        $subject = 'Updated Post: ' . get_the_title($post_ID);
-        $message = 'A post has been published or significantly updated: <a href="' . get_permalink($post_ID) . '">' . get_permalink($post_ID) . '</a>';
+        $subject = $is_new_post ? 'New Post: ' . get_the_title($post_ID) : 'Updated Post: ' . get_the_title($post_ID);
+        $message = 'A post has been ' . ($is_new_post ? 'published' : 'significantly updated') . ': <a href="' . get_permalink($post_ID) . '">' . get_permalink($post_ID) . '</a>';
         $headers = ['Content-Type: text/html; charset=UTF-8', 'From: ' . $from_email];
 
         foreach ($subscribers as $email) {
@@ -131,4 +136,40 @@ function gfs_notify_subscribers_on_update($post_ID, $post, $update) {
             }
         }
     }
+}
+
+// Admin Settings Page UI
+function gfs_settings_page() {
+    ?>
+    <div class="wrap">
+        <h1>Email Posts to Subscribers</h1>
+        <form method="post" action="options.php">
+            <?php settings_fields('gfs_settings_group'); ?>
+            <?php do_settings_sections('gfs_settings_group'); ?>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">Subscribe Form ID</th>
+                    <td><input type="text" name="gfs_form_id" value="<?php echo esc_attr(get_option('gfs_form_id', '1')); ?>" /></td>
+                </tr>
+                <tr>
+                    <th scope="row">Subscribe Email Field ID</th>
+                    <td><input type="text" name="gfs_email_field_id" value="<?php echo esc_attr(get_option('gfs_email_field_id', '1')); ?>" /></td>
+                </tr>
+                <tr>
+                    <th scope="row">Unsubscribe Form ID</th>
+                    <td><input type="text" name="gfs_unsubscribe_form_id" value="<?php echo esc_attr(get_option('gfs_unsubscribe_form_id', '2')); ?>" /></td>
+                </tr>
+                <tr>
+                    <th scope="row">Unsubscribe Email Field ID</th>
+                    <td><input type="text" name="gfs_unsubscribe_email_field_id" value="<?php echo esc_attr(get_option('gfs_unsubscribe_email_field_id', '2')); ?>" /></td>
+                </tr>
+                <tr>
+                    <th scope="row">From Email Address</th>
+                    <td><input type="email" name="gfs_from_email" value="<?php echo esc_attr(get_option('gfs_from_email', get_bloginfo('admin_email'))); ?>" /></td>
+                </tr>
+            </table>
+            <?php submit_button(); ?>
+        </form>
+    </div>
+    <?php
 }
