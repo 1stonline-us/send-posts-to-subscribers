@@ -49,6 +49,10 @@ Yes! You can deactivate subscribers from the database or by having them submit t
 Yes! It integrates with **WP Mail SMTP, SendGrid, Mailgun, Postmark, and more**.
 
 == Changelog ==
+= 1.3 =
+* Added Email on Post Change.
+* Email Logging on Debug
+
 = 1.2 =
 * Added Unsubscribe Form support.
 * Enhanced compatibility with external post generators.
