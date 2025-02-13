@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Email Posts to Subscribers
+ * Plugin Name: Send Posts to Subscribers
  * Plugin URI: https://notesrss.com/plugins/
  * Description: Collects email subscribers via Gravity Forms and emails new posts using SMTP.
  * Version: 1.4
@@ -38,13 +38,13 @@ function gfs_create_subscriber_table() {
 // Admin Menu for Plugin Settings
 add_action('admin_menu', 'gfs_add_admin_menu');
 function gfs_add_admin_menu() {
-    add_options_page('Email Posts to Subscribers', 'Email Subscribers', 'manage_options', 'email-posts-to-subscribers', 'gfs_settings_page');
+    add_options_page('Send Posts to Subscribers', 'Email Subscribers', 'manage_options', 'send-posts-to-subscribers', 'gfs_settings_page');
 }
 
 // Add Settings Link to Plugins Page
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'gfs_add_settings_link');
 function gfs_add_settings_link($links) {
-    $settings_link = '<a href="options-general.php?page=email-posts-to-subscribers">Settings</a>';
+    $settings_link = '<a href="options-general.php?page=send-posts-to-subscribers">Settings</a>';
     array_unshift($links, $settings_link);
     return $links;
 }
@@ -144,11 +144,11 @@ function gfs_notify_subscribers_on_publish($post_ID) {
 // Restrict Settings Page to Admins
 function gfs_settings_page() {
     if (!current_user_can('manage_options')) {
-        wp_die(esc_html__('Unauthorized access', 'email-posts-to-subscribers'));
+        wp_die(esc_html__('Unauthorized access', 'send-posts-to-subscribers'));
     }
     ?>
     <div class="wrap">
-        <h1><?php echo esc_html__('Email Posts to Subscribers', 'email-posts-to-subscribers'); ?></h1>
+        <h1><?php echo esc_html__('Send Posts to Subscribers', 'send-posts-to-subscribers'); ?></h1>
         <form method="post" action="options.php">
             <?php 
                 settings_fields('gfs_settings_group'); 
@@ -156,23 +156,23 @@ function gfs_settings_page() {
             ?>
             <table class="form-table">
                 <tr>
-                    <th scope="row"><?php echo esc_html__('Subscribe Form ID', 'email-posts-to-subscribers'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Subscribe Form ID', 'send-posts-to-subscribers'); ?></th>
                     <td><input type="text" name="gfs_form_id" value="<?php echo esc_attr(get_option('gfs_form_id', '1')); ?>" /></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('Subscribe Email Field ID', 'email-posts-to-subscribers'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Subscribe Email Field ID', 'send-posts-to-subscribers'); ?></th>
                     <td><input type="text" name="gfs_email_field_id" value="<?php echo esc_attr(get_option('gfs_email_field_id', '1')); ?>" /></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('Unsubscribe Form ID', 'email-posts-to-subscribers'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Unsubscribe Form ID', 'send-posts-to-subscribers'); ?></th>
                     <td><input type="text" name="gfs_unsubscribe_form_id" value="<?php echo esc_attr(get_option('gfs_unsubscribe_form_id', '')); ?>" /></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('Unsubscribe Email Field ID', 'email-posts-to-subscribers'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Unsubscribe Email Field ID', 'send-posts-to-subscribers'); ?></th>
                     <td><input type="text" name="gfs_unsubscribe_email_field_id" value="<?php echo esc_attr(get_option('gfs_unsubscribe_email_field_id', '')); ?>" /></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('From Email Address', 'email-posts-to-subscribers'); ?></th>
+                    <th scope="row"><?php echo esc_html__('From Email Address', 'send-posts-to-subscribers'); ?></th>
                     <td><input type="email" name="gfs_from_email" value="<?php echo esc_attr(get_option('gfs_from_email', get_bloginfo('admin_email'))); ?>" /></td>
                 </tr>
             </table>
