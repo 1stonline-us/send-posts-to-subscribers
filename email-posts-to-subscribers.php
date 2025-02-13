@@ -135,7 +135,7 @@ function gfs_notify_subscribers_on_publish($post_ID) {
         foreach ($subscribers as $email) {
             $sanitized_email = sanitize_email($email);
             if (!empty($sanitized_email) && is_email($sanitized_email)) {
-                wp_mail($sanitized_email, $subject, $message, $headers))
+                wp_mail($sanitized_email, $subject, $message, $headers);
             }
         }
     }
@@ -148,7 +148,7 @@ function gfs_settings_page() {
     }
     ?>
     <div class="wrap">
-        <h1><?php echo esc_html('Email Posts to Subscribers'); ?></h1>
+        <h1><?php echo esc_html__('Email Posts to Subscribers', 'email-posts-to-subscribers'); ?></h1>
         <form method="post" action="options.php">
             <?php 
                 settings_fields('gfs_settings_group'); 
@@ -156,31 +156,29 @@ function gfs_settings_page() {
             ?>
             <table class="form-table">
                 <tr>
-                    <th scope="row"><?php echo esc_html('Subscribe Form ID'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Subscribe Form ID', 'email-posts-to-subscribers'); ?></th>
                     <td><input type="text" name="gfs_form_id" value="<?php echo esc_attr(get_option('gfs_form_id', '1')); ?>" /></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html('Subscribe Email Field ID'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Subscribe Email Field ID', 'email-posts-to-subscribers'); ?></th>
                     <td><input type="text" name="gfs_email_field_id" value="<?php echo esc_attr(get_option('gfs_email_field_id', '1')); ?>" /></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html('Unsubscribe Form ID'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Unsubscribe Form ID', 'email-posts-to-subscribers'); ?></th>
                     <td><input type="text" name="gfs_unsubscribe_form_id" value="<?php echo esc_attr(get_option('gfs_unsubscribe_form_id', '')); ?>" /></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html('Unsubscribe Email Field ID'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Unsubscribe Email Field ID', 'email-posts-to-subscribers'); ?></th>
                     <td><input type="text" name="gfs_unsubscribe_email_field_id" value="<?php echo esc_attr(get_option('gfs_unsubscribe_email_field_id', '')); ?>" /></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html('From Email Address'); ?></th>
+                    <th scope="row"><?php echo esc_html__('From Email Address', 'email-posts-to-subscribers'); ?></th>
                     <td><input type="email" name="gfs_from_email" value="<?php echo esc_attr(get_option('gfs_from_email', get_bloginfo('admin_email'))); ?>" /></td>
                 </tr>
             </table>
             <?php submit_button(); ?>
         </form>
     </div>
-    <?php 
+    <?php
 }
-
-
 
