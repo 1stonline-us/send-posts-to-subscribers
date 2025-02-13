@@ -3,12 +3,12 @@
  * Plugin Name: Send Posts to Subscribers
  * Plugin URI: https://notesrss.com/plugins/
  * Description: Collects email subscribers via Gravity Forms and emails new posts using SMTP.
- * Version: 1.4
+ * Version: 1.5
  * Author: Michael Stuart
  * Author URI: https://notesrss.com/about/
  * Requires at least: 5.6  
- * Tested up to: 6.5  
- * Stable tag: 1.4  
+ * Tested up to: 6.7 
+ * Stable tag: 1.5  
  * Requires PHP: 7.4
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
