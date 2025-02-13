@@ -3,12 +3,12 @@
  * Plugin Name: Email Posts to Subscribers
  * Plugin URI: https://notesrss.com/plugins/
  * Description: Collects email subscribers via Gravity Forms and emails new posts using SMTP.
- * Version: 1.3
+ * Version: 1.4
  * Author: Michael Stuart
  * Author URI: https://notesrss.com/about/
  * Requires at least: 5.6  
  * Tested up to: 6.5  
- * Stable tag: 1.3  
+ * Stable tag: 1.4  
  * Requires PHP: 7.4
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -59,7 +59,7 @@ function gfs_register_settings() {
     register_setting('gfs_settings_group', 'gfs_from_email');
 }
 
-// Capture Subscriptions via Gravity Forms
+// Secure Subscription Query
 add_action('gform_after_submission', 'gfs_save_email', 10, 2);
 function gfs_save_email($entry, $form) {
     global $wpdb;
@@ -71,7 +71,11 @@ function gfs_save_email($entry, $form) {
     
     $email = sanitize_email($entry[$email_field_id]);
     if (!empty($email) && is_email($email)) {
-        $wpdb->replace($table_name, [ 'email' => $email, 'active' => 1 ], ['%s', '%d']);
+        $wpdb->replace(
+            $table_name,
+            [ 'email' => sanitize_email($email), 'active' => 1 ],
+            ['%s', '%d']
+        );
     }
 }
 
@@ -103,42 +107,49 @@ function gfs_unsubscribe_email($entry, $form) {
 }
 
 
+// Secure Email Sending on Publish
 add_action('publish_post', 'gfs_notify_subscribers_on_publish');
 function gfs_notify_subscribers_on_publish($post_ID) {
     global $wpdb;
-
-    // Ensure we get the correct post details
+	
+	if (!current_user_can('manage_options')) return;
+    
     $post = get_post($post_ID);
     if (!$post) return;
-
-    // Get the correct permalink, title, and excerpt
-    $post_permalink = get_permalink($post_ID);
+    
+    $post_permalink = esc_url(get_permalink($post_ID));
     $post_title = esc_html($post->post_title);
-    $post_excerpt = !empty($post->post_excerpt) ? esc_html($post->post_excerpt) : wp_trim_words($post->post_content, 30, '...');
-
-    // Get subscribers
-    $table_name = $wpdb->prefix . 'gfs_subscribers';
-    $from_email = get_option('gfs_from_email', get_bloginfo('admin_email'));
-    $subscribers = $wpdb->get_col("SELECT email FROM $table_name WHERE active = 1");
+    $post_excerpt = esc_html(wp_trim_words($post->post_content, 30, '...'));
+    
+    $from_email = esc_html(get_option('gfs_from_email', get_bloginfo('admin_email')));
+	$subscribers = $wpdb->get_col($wpdb->prepare("SELECT email FROM {$wpdb->prefix}gfs_subscribers WHERE active = %d", 1));
 
     if (!empty($subscribers)) {
         $subject = 'New Post: ' . $post_title;
         $message = '<h2>' . $post_title . '</h2>';
         $message .= '<p>' . $post_excerpt . '</p>';
-        $message .= '<p><a href="' . esc_url($post_permalink) . '">Read More</a></p>';
-
-        $headers = ['Content-Type: text/html; charset=UTF-8', 'From: ' . esc_html($from_email)];
-
+        $message .= '<p><a href="' . $post_permalink . '">Read More</a></p>';
+        
+        $headers = ['Content-Type: text/html; charset=UTF-8', 'From: ' . $from_email];
+        
         foreach ($subscribers as $email) {
-            if (!wp_mail($email, $subject, $message, $headers)) {
-                error_log("Failed to send email to: " . $email);
+            $sanitized_email = sanitize_email($email);
+            if (!empty($sanitized_email) && is_email($sanitized_email)) {
+                if (!wp_mail($sanitized_email, $subject, $message, $headers)) {
+                    error_log("Failed to send email to: " . $sanitized_email);
+                }
             }
         }
     }
 }
 
-// Admin Settings Page UI
+
+
+// Restrict Settings Page to Admins
 function gfs_settings_page() {
+    if (!current_user_can('manage_options')) {
+        wp_die(__('Unauthorized access', 'email-posts-to-subscribers'));
+    }
     ?>
     <div class="wrap">
         <h1>Email Posts to Subscribers</h1>
@@ -148,19 +159,11 @@ function gfs_settings_page() {
             <table class="form-table">
                 <tr>
                     <th scope="row">Subscribe Form ID</th>
-                    <td><input type="text" name="gfs_form_id" value="<?php echo esc_attr(get_option('gfs_form_id', '1')); ?>" /></td>
+                    <td><input type="text" name="gfs_form_id" value="<?php echo get_option('gfs_form_id', '1'); ?>" /></td>
                 </tr>
                 <tr>
                     <th scope="row">Subscribe Email Field ID</th>
                     <td><input type="text" name="gfs_email_field_id" value="<?php echo esc_attr(get_option('gfs_email_field_id', '1')); ?>" /></td>
-                </tr>
-                <tr>
-                    <th scope="row">Unsubscribe Form ID</th>
-                    <td><input type="text" name="gfs_unsubscribe_form_id" value="<?php echo esc_attr(get_option('gfs_unsubscribe_form_id', '2')); ?>" /></td>
-                </tr>
-                <tr>
-                    <th scope="row">Unsubscribe Email Field ID</th>
-                    <td><input type="text" name="gfs_unsubscribe_email_field_id" value="<?php echo esc_attr(get_option('gfs_unsubscribe_email_field_id', '2')); ?>" /></td>
                 </tr>
                 <tr>
                     <th scope="row">From Email Address</th>
