@@ -143,8 +143,6 @@ function gfs_notify_subscribers_on_publish($post_ID) {
     }
 }
 
-
-
 // Restrict Settings Page to Admins
 function gfs_settings_page() {
     if (!current_user_can('manage_options')) {
@@ -159,11 +157,19 @@ function gfs_settings_page() {
             <table class="form-table">
                 <tr>
                     <th scope="row">Subscribe Form ID</th>
-                    <td><input type="text" name="gfs_form_id" value="<?php echo get_option('gfs_form_id', '1'); ?>" /></td>
+                    <td><input type="text" name="gfs_form_id" value="<?php echo esc_attr(get_option('gfs_form_id', '1')); ?>" /></td>
                 </tr>
                 <tr>
                     <th scope="row">Subscribe Email Field ID</th>
                     <td><input type="text" name="gfs_email_field_id" value="<?php echo esc_attr(get_option('gfs_email_field_id', '1')); ?>" /></td>
+                </tr>
+                <tr>
+                    <th scope="row">Unsubscribe Form ID</th>
+                    <td><input type="text" name="gfs_unsubscribe_form_id" value="<?php echo esc_attr(get_option('gfs_unsubscribe_form_id', '')); ?>" /></td>
+                </tr>
+                <tr>
+                    <th scope="row">Unsubscribe Email Field ID</th>
+                    <td><input type="text" name="gfs_unsubscribe_email_field_id" value="<?php echo esc_attr(get_option('gfs_unsubscribe_email_field_id', '')); ?>" /></td>
                 </tr>
                 <tr>
                     <th scope="row">From Email Address</th>
@@ -175,3 +181,4 @@ function gfs_settings_page() {
     </div>
     <?php
 }
+
