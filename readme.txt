@@ -3,7 +3,7 @@ Contributors: mikestuart
 Tags: gravity forms, email subscribers, post notifications, smtp, email list, rss to email  
 Requires at least: 5.6  
 Tested up to: 6.5  
-Stable tag: 1.2  
+Stable tag: 1.4  
 Requires PHP: 7.4  
 License: GPLv2 or later  
 License URI: https://www.gnu.org/licenses/gpl-2.0.html  
@@ -49,6 +49,11 @@ Yes! You can deactivate subscribers from the database or by having them submit t
 Yes! It integrates with **WP Mail SMTP, SendGrid, Mailgun, Postmark, and more**.
 
 == Changelog ==
+= 1.4 =
+* plugin is secured for SQL Injection,
+* Cross-Site Scripting (XSS), and
+* Sensitive Data Exposure.
+
 = 1.3 =
 * Added Email on Post Change.
 * Email Logging on Debug
