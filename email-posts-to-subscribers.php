@@ -150,8 +150,10 @@ function gfs_settings_page() {
     <div class="wrap">
         <h1><?php echo esc_html('Email Posts to Subscribers'); ?></h1>
         <form method="post" action="options.php">
-            <?php settings_fields('gfs_settings_group'); ?>
-            <?php do_settings_sections('gfs_settings_group'); ?>
+            <?php 
+                settings_fields('gfs_settings_group'); 
+                do_settings_sections('gfs_settings_group'); 
+            ?>
             <table class="form-table">
                 <tr>
                     <th scope="row"><?php echo esc_html('Subscribe Form ID'); ?></th>
@@ -177,6 +179,7 @@ function gfs_settings_page() {
             <?php submit_button(); ?>
         </form>
     </div>
-    <?php
+    <?php 
 }
+
 
