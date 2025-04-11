@@ -108,7 +108,7 @@ function gfs_unsubscribe_email($entry, $form) {
 
 
 // Secure Email Sending on Publish
-add_action('publish_post', 'gfs_notify_subscribers_on_publish');
+// add_action('publish_post', 'gfs_notify_subscribers_on_publish'); // Disabled to use debounce system
 function gfs_notify_subscribers_on_publish($post_ID) {
     global $wpdb;
 	
@@ -182,3 +182,81 @@ function gfs_settings_page() {
     <?php
 }
 
+
+
+
+// Hook into post save
+add_action('save_post', 'gfs_debounce_post_email', 10, 3);
+
+function gfs_debounce_post_email($post_ID, $post, $update) {
+    if (wp_is_post_revision($post_ID) || $post->post_status !== 'publish') {
+        return;
+    }
+
+    // Set a transient to delay email sending by 15 minutes
+    $transient_key = 'gfs_email_pending_' . $post_ID;
+
+    if (get_transient($transient_key)) {
+        // Email already scheduled, skip to avoid duplicates
+        return;
+    }
+
+    // Schedule email in 15 minutes
+    wp_schedule_single_event(time() + 900, 'gfs_send_delayed_post_email', array($post_ID));
+
+    // Set transient to prevent duplicates
+    set_transient($transient_key, true, 900); // 15 minutes
+}
+
+// Register the actual sending logic
+add_action('gfs_send_delayed_post_email', 'gfs_send_email_to_subscribers');
+
+function gfs_send_email_to_subscribers($post_ID) {
+    // Original send logic (placeholder)
+    $post = get_post($post_ID);
+    if ($post && $post->post_status === 'publish') {
+        gfs_send_post_email_to_all_subscribers($post_ID);
+    }
+}
+
+
+
+
+
+
+
+function gfs_send_post_email_to_all_subscribers($post_ID) {
+    global $wpdb;
+
+    $subscribers_table = $wpdb->prefix . 'gfs_subscribers';
+    $subscribers = $wpdb->get_results("SELECT email FROM $subscribers_table WHERE active = 1");
+
+    if (empty($subscribers)) return;
+
+    $post = get_post($post_ID);
+    if (!$post || $post->post_status !== 'publish') return;
+
+    $subject = 'New Post: ' . $post->post_title;
+
+    $message = '<h2>' . esc_html($post->post_title) . '</h2>';
+    $message .= wpautop($post->post_content);
+    $message .= '<p><a href="' . esc_url(get_permalink($post_ID)) . '">Read the full post</a></p>';
+
+    $headers = ['Content-Type: text/html; charset=UTF-8'];
+
+    foreach ($subscribers as $subscriber) {
+        $sanitized_email = sanitize_email($subscriber->email);
+        if (!empty($sanitized_email) && is_email($sanitized_email)) {
+            wp_mail($sanitized_email, $subject, $message, $headers);
+        }
+    }
+}
+
+// Manual testing trigger via ?trigger_post_email_test=POST_ID
+add_action('admin_init', function () {
+    if (current_user_can('manage_options') && isset($_GET['trigger_post_email_test'])) {
+        $post_ID = intval($_GET['trigger_post_email_test']);
+        gfs_send_post_email_to_all_subscribers($post_ID);
+        wp_die("Test email triggered for post ID: " . $post_ID);
+    }
+});

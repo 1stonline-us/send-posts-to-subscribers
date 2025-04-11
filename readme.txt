@@ -2,8 +2,8 @@
 Contributors: mikestuart   
 Tags: gravity forms, email subscribers, post notifications, smtp, email list, rss to email  
 Requires at least: 5.6  
-Tested up to: 6.5  
-Stable tag: 1.4  
+Tested up to: 6.7  
+Stable tag: 1.6  
 Requires PHP: 7.4  
 License: GPLv2 or later  
 License URI: https://www.gnu.org/licenses/gpl-2.0.html  
@@ -14,6 +14,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 = Features =
 * Collects subscribers via **Gravity Forms**.
 * Sends **automated post email notifications**.
+* Prevents duplicate emails when posts are updated multiple times.
 * Includes **Unsubscribe Form** support.
 * Works with **SMTP plugins** for better email delivery.
 * Compatible with posts generated manually or through external services like **NotesRSS.com**.
@@ -49,11 +50,18 @@ Yes! You can deactivate subscribers from the database or by having them submit t
 Yes! It integrates with **WP Mail SMTP, SendGrid, Mailgun, Postmark, and more**.
 
 == Changelog ==
+= 1.6 =
+* Added 15-minute debounce system to prevent duplicate emails when editing posts after publishing.
+* Emails now scheduled via WP-Cron using `wp_schedule_single_event()`.
+* Disabled immediate email sending (`publish_post` hook) to avoid double-sending.
+* Improved email formatting with HTML structure and post links.
+* Added admin test trigger via `?trigger_post_email_test=POST_ID` for testing.
+
 = 1.5 =
-* rename plugin to Send Posts to Subscribers
+* Rename plugin to Send Posts to Subscribers
 
 = 1.4 =
-* plugin is secured for SQL Injection,
+* Plugin is secured for SQL Injection,
 * Cross-Site Scripting (XSS), and
 * Sensitive Data Exposure.
 
