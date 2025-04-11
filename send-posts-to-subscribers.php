@@ -223,6 +223,7 @@ function gfs_debounce_post_email($post_ID, $post, $update) {
     }
 
     // Schedule email in 15 minutes
+	wp_clear_scheduled_hook('gfs_send_delayed_post_email', array($post_ID));
     wp_schedule_single_event(current_time('timestamp') + 900, 'gfs_send_delayed_post_email', array($post_ID));
 
     // Set transient to prevent duplicates
