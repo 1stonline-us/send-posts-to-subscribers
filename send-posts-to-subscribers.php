@@ -156,7 +156,7 @@ function gfs_settings_page() {
         $next_run = wp_next_scheduled('gfs_send_delayed_post_email', array($post_ID));
 
         if ($next_run) {
-            echo '<p>🕒 Email for <strong>Post ID ' . esc_html($post_ID) . '</strong> is scheduled at: <strong>' . date('Y-m-d H:i:s', $next_run) . '</strong></p>';
+            echo '<p>🕒 Email for <strong>Post ID ' . esc_html($post_ID) . '</strong> is scheduled at: <strong>' . date_i18n('Y-m-d H:i:s', $next_run) . '</strong></p>';
         } else {
             echo '<p>✅ No email currently scheduled for the latest post (ID ' . esc_html($post_ID) . ').</p>';
         }
