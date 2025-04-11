@@ -145,24 +145,32 @@ function gfs_settings_page() {
     echo '<h2>Email Queue Status</h2>';
     global $wpdb;
 
-    $latest_post = get_posts(array(
-        'numberposts' => 1,
-        'post_type' => 'post',
-        'post_status' => 'publish'
-    ));
+	echo '<h2>Email Queue Status (Last 10 Posts)</h2>';
 
-    if (!empty($latest_post)) {
-        $post_ID = $latest_post[0]->ID;
-        $next_run = wp_next_scheduled('gfs_send_delayed_post_email', array($post_ID));
+	$recent_posts = get_posts(array(
+		'numberposts' => 10,
+		'post_type'   => 'post',
+		'post_status' => 'publish',
+		'orderby'     => 'post_date',
+		'order'       => 'DESC'
+	));
 
-        if ($next_run) {
-            echo '<p>🕒 Email for <strong>Post ID ' . esc_html($post_ID) . '</strong> is scheduled at: <strong>' . date_i18n('Y-m-d H:i:s', $next_run) . '</strong></p>';
-        } else {
-            echo '<p>✅ No email currently scheduled for the latest post (ID ' . esc_html($post_ID) . ').</p>';
-        }
-    } else {
-        echo '<p>No published posts found.</p>';
-    }
+	if (!empty($recent_posts)) {
+		echo '<ul>';
+		foreach ($recent_posts as $post) {
+			$post_ID = $post->ID;
+			$next_run = wp_next_scheduled('gfs_send_delayed_post_email', array($post_ID));
+
+			if ($next_run) {
+				echo '<li>🕒 <strong>' . esc_html(get_the_title($post_ID)) . "</strong> (ID $post_ID) — Email scheduled at: <strong>" . date_i18n('Y-m-d H:i:s', $next_run) . '</strong></li>';
+			} else {
+				echo '<li>✅ <strong>' . esc_html(get_the_title($post_ID)) . "</strong> (ID $post_ID) — No email scheduled</li>";
+			}
+		}
+		echo '</ul>';
+	} else {
+		echo '<p>No published posts found.</p>';
+	}
 
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('Unauthorized access', 'send-posts-to-subscribers'));
