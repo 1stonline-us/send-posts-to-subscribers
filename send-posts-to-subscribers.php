@@ -3,12 +3,12 @@
  * Plugin Name: Send Posts to Subscribers
  * Plugin URI: https://notesrss.com/plugins/
  * Description: Collects email subscribers via Gravity Forms and emails new posts using SMTP.
- * Version: 1.5
+ * Version: 1.6
  * Author: Michael Stuart
  * Author URI: https://notesrss.com/about/
  * Requires at least: 5.6  
  * Tested up to: 6.7 
- * Stable tag: 1.5  
+ * Stable tag: 1.6  
  * Requires PHP: 7.4
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -107,8 +107,7 @@ function gfs_unsubscribe_email($entry, $form) {
 }
 
 
-// Secure Email Sending on Publish
-// add_action('publish_post', 'gfs_notify_subscribers_on_publish'); // Disabled to use debounce system
+// Secure Email Sending on Publish// add_action('publish_post', 'gfs_notify_subscribers_on_publish'); // Disabled to use debounce system
 function gfs_notify_subscribers_on_publish($post_ID) {
     global $wpdb;
 	
@@ -143,6 +142,28 @@ function gfs_notify_subscribers_on_publish($post_ID) {
 
 // Restrict Settings Page to Admins
 function gfs_settings_page() {
+    echo '<h2>Email Queue Status</h2>';
+    global $wpdb;
+
+    $latest_post = get_posts(array(
+        'numberposts' => 1,
+        'post_type' => 'post',
+        'post_status' => 'publish'
+    ));
+
+    if (!empty($latest_post)) {
+        $post_ID = $latest_post[0]->ID;
+        $next_run = wp_next_scheduled('gfs_send_delayed_post_email', array($post_ID));
+
+        if ($next_run) {
+            echo '<p>🕒 Email for <strong>Post ID ' . esc_html($post_ID) . '</strong> is scheduled at: <strong>' . date('Y-m-d H:i:s', $next_run) . '</strong></p>';
+        } else {
+            echo '<p>✅ No email currently scheduled for the latest post (ID ' . esc_html($post_ID) . ').</p>';
+        }
+    } else {
+        echo '<p>No published posts found.</p>';
+    }
+
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('Unauthorized access', 'send-posts-to-subscribers'));
     }
@@ -215,14 +236,9 @@ function gfs_send_email_to_subscribers($post_ID) {
     // Original send logic (placeholder)
     $post = get_post($post_ID);
     if ($post && $post->post_status === 'publish') {
-        gfs_send_post_email_to_all_subscribers($post_ID);
+
     }
 }
-
-
-
-
-
 
 
 function gfs_send_post_email_to_all_subscribers($post_ID) {
@@ -256,7 +272,7 @@ function gfs_send_post_email_to_all_subscribers($post_ID) {
 add_action('admin_init', function () {
     if (current_user_can('manage_options') && isset($_GET['trigger_post_email_test'])) {
         $post_ID = intval($_GET['trigger_post_email_test']);
-        gfs_send_post_email_to_all_subscribers($post_ID);
+
         wp_die("Test email triggered for post ID: " . $post_ID);
     }
 });
