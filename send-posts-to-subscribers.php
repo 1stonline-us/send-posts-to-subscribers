@@ -161,7 +161,7 @@ function gfs_settings_page() {
 			$next_run = wp_next_scheduled('gfs_send_delayed_post_email', array($post_ID));
 
 			if ($next_run) {
-				echo '<li>🕒 <strong>' . esc_html(get_the_title($post_ID)) . "</strong> (ID $post_ID) — Email scheduled at: <strong>" . date_i18n('Y-m-d H:i:s', $next_run) . '</strong></li>';
+				echo '<li>���� <strong>' . esc_html(get_the_title($post_ID)) . "</strong> (ID $post_ID) — Email scheduled at: <strong>" . date_i18n('Y-m-d H:i:s', $next_run) . '</strong></li>';
 			} else {
 				echo '<li>✅ <strong>' . esc_html(get_the_title($post_ID)) . "</strong> (ID $post_ID) — No email scheduled</li>";
 			}
@@ -243,7 +243,7 @@ function gfs_send_email_to_subscribers($post_ID) {
     // Original send logic (placeholder)
     $post = get_post($post_ID);
     if ($post && $post->post_status === 'publish') {
-
+        gfs_send_post_email_to_all_subscribers($post_ID);
     }
 }
 
