@@ -3,7 +3,7 @@ Contributors: mikestuart
 Tags: gravity forms, email subscribers, post notifications, smtp, email list, rss to email  
 Requires at least: 5.6  
 Tested up to: 6.7  
-Stable tag: 1.6  
+Stable tag: 1.7  
 Requires PHP: 7.4  
 License: GPLv2 or later  
 License URI: https://www.gnu.org/licenses/gpl-2.0.html  
@@ -50,6 +50,9 @@ Yes! You can deactivate subscribers from the database or by having them submit t
 Yes! It integrates with **WP Mail SMTP, SendGrid, Mailgun, Postmark, and more**.
 
 == Changelog ==
+ 1.7 =
+* Fixed SMTP send bug.
+
 = 1.6 =
 * Added 15-minute debounce system to prevent duplicate emails when editing posts after publishing.
 * Emails now scheduled via WP-Cron using `wp_schedule_single_event()`.

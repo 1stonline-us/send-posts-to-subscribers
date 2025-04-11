@@ -3,12 +3,12 @@
  * Plugin Name: Send Posts to Subscribers
  * Plugin URI: https://notesrss.com/plugins/
  * Description: Collects email subscribers via Gravity Forms and emails new posts using SMTP.
- * Version: 1.6
+ * Version: 1.7
  * Author: Michael Stuart
  * Author URI: https://notesrss.com/about/
  * Requires at least: 5.6  
  * Tested up to: 6.7 
- * Stable tag: 1.6  
+ * Stable tag: 1.7  
  * Requires PHP: 7.4
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -216,6 +216,7 @@ function gfs_settings_page() {
 // Hook into post save
 add_action('save_post', 'gfs_debounce_post_email', 10, 3);
 
+
 function gfs_debounce_post_email($post_ID, $post, $update) {
     if (wp_is_post_revision($post_ID) || $post->post_status !== 'publish') {
         return;
@@ -236,7 +237,7 @@ function gfs_debounce_post_email($post_ID, $post, $update) {
 }
 
 // Register the actual sending logic
-add_action('gfs_send_delayed_post_email', 'gfs_send_email_to_subscribers');
+add_action('gfs_send_delayed_post_email', 'gfs_send_email_to_subscribers', 10, 1);
 
 function gfs_send_email_to_subscribers($post_ID) {
     // Original send logic (placeholder)
