@@ -142,7 +142,6 @@ function gfs_notify_subscribers_on_publish($post_ID) {
 
 // Restrict Settings Page to Admins
 function gfs_settings_page() {
-    echo '<h2>Email Queue Status</h2>';
     global $wpdb;
 
 	echo '<h2>Email Queue Status (Last 10 Posts)</h2>';
