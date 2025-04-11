@@ -214,20 +214,18 @@ function gfs_debounce_post_email($post_ID, $post, $update) {
         return;
     }
 
-    // Set a transient to delay email sending by 15 minutes
-    $transient_key = 'gfs_email_pending_' . $post_ID;
+	if (wp_is_post_revision($post_ID) || $post->post_status !== 'publish') {
+		return;
+	}
 
-    if (get_transient($transient_key)) {
-        // Email already scheduled, skip to avoid duplicates
-        return;
-    }
+	$transient_key = 'gfs_email_pending_' . $post_ID;
 
-    // Schedule email in 15 minutes
+	// Always clear and re-schedule the email
 	wp_clear_scheduled_hook('gfs_send_delayed_post_email', array($post_ID));
-    wp_schedule_single_event(current_time('timestamp') + 900, 'gfs_send_delayed_post_email', array($post_ID));
+	wp_schedule_single_event(current_time('timestamp') + 900, 'gfs_send_delayed_post_email', array($post_ID));
 
-    // Set transient to prevent duplicates
-    set_transient($transient_key, true, 900); // 15 minutes
+	// Reset the transient for the next 15-minute delay
+	set_transient($transient_key, true, 900);
 }
 
 // Register the actual sending logic
