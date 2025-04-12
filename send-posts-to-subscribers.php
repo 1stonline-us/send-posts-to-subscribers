@@ -3,12 +3,12 @@
  * Plugin Name: Send Posts to Subscribers
  * Plugin URI: https://notesrss.com/plugins/
  * Description: Collects email subscribers via Gravity Forms and emails new posts using SMTP.
- * Version: 1.7
+ * Version: 1.8
  * Author: Michael Stuart
  * Author URI: https://notesrss.com/about/
  * Requires at least: 5.6  
  * Tested up to: 6.7 
- * Stable tag: 1.7  
+ * Stable tag: 1.8  
  * Requires PHP: 7.4
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -107,7 +107,7 @@ function gfs_unsubscribe_email($entry, $form) {
 }
 
 
-// Secure Email Sending on Publish// add_action('publish_post', 'gfs_notify_subscribers_on_publish'); // Disabled to use debounce system
+// add_action('publish_post', 'gfs_notify_subscribers_on_publish'); 
 function gfs_notify_subscribers_on_publish($post_ID) {
     global $wpdb;
 	
@@ -218,22 +218,20 @@ add_action('save_post', 'gfs_debounce_post_email', 10, 3);
 
 
 function gfs_debounce_post_email($post_ID, $post, $update) {
-    if (wp_is_post_revision($post_ID) || $post->post_status !== 'publish') {
-        return;
-    }
-
-	if (wp_is_post_revision($post_ID) || $post->post_status !== 'publish') {
-		return;
-	}
-
+	if (
+		wp_is_post_revision($post_ID) ||
+		$post->post_status !== 'publish' ||
+		$post->post_type !== 'post'
+	) return;
+	
 	$transient_key = 'gfs_email_pending_' . $post_ID;
 
 	// Always clear and re-schedule the email
 	wp_clear_scheduled_hook('gfs_send_delayed_post_email', array($post_ID));
-	wp_schedule_single_event(current_time('timestamp') + 900, 'gfs_send_delayed_post_email', array($post_ID));
+	wp_schedule_single_event(current_time('timestamp') + 700, 'gfs_send_delayed_post_email', array($post_ID));
 
 	// Reset the transient for the next 15-minute delay
-	set_transient($transient_key, true, 900);
+	set_transient($transient_key, true, 700);
 }
 
 // Register the actual sending logic
@@ -281,5 +279,30 @@ add_action('admin_init', function () {
         $post_ID = intval($_GET['trigger_post_email_test']);
 
         wp_die("Test email triggered for post ID: " . $post_ID);
+    }
+});
+
+// Admin test function to send all scheduled emails immediately
+add_action('admin_init', function () {
+    if (current_user_can('manage_options') && isset($_GET['trigger_all_scheduled_emails_now'])) {
+        $posts = get_posts([
+            'post_type'   => 'post',
+            'post_status' => 'publish',
+            'numberposts' => -1
+        ]);
+
+        $triggered = 0;
+        foreach ($posts as $post) {
+            $post_ID = $post->ID;
+            $next_run = wp_next_scheduled('gfs_send_delayed_post_email', [$post_ID]);
+
+            if ($next_run) {
+                wp_clear_scheduled_hook('gfs_send_delayed_post_email', [$post_ID]);
+                gfs_send_email_to_subscribers($post_ID);
+                $triggered++;
+            }
+        }
+
+        wp_die("✅ Triggered immediate email sends for $triggered queued posts.");
     }
 });
